@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import io from "socket.io-client";
 import { GameData, UserData } from "../types";
 
@@ -9,17 +9,23 @@ const Game: React.FC = () => {
   const [gameActive, setGameActive] = useState(false);
   const [userId] = useState(1); // Replace with actual user ID
   const [username] = useState("Player1"); // Replace with actual username
+  const multiplierRef = useRef(multiplier); // To keep track of multiplier without triggering re-renders
 
   useEffect(() => {
     // Listen for multiplier updates
     socket.on("multiplierUpdate", (data: GameData) => {
-      setMultiplier(data.multiplier);
+      // Only update if the multiplier has changed significantly
+      if (Math.abs(data.multiplier - multiplierRef.current) > 0.01) {
+        setMultiplier(data.multiplier);
+        multiplierRef.current = data.multiplier;
+      }
     });
 
     // Listen for game start
     socket.on("gameStart", () => {
       setGameActive(true);
       setMultiplier(1);
+      multiplierRef.current = 1;
     });
 
     // Listen for game end
@@ -33,7 +39,7 @@ const Game: React.FC = () => {
       socket.off("gameStart");
       socket.off("gameEnd");
     };
-  }, []);
+  }, [multiplier]); // Only track multiplier for updates
 
   const placeBet = () => {
     const amount = 100; // Replace with actual bet amount
@@ -48,7 +54,7 @@ const Game: React.FC = () => {
   return (
     <div className="game">
       <h1>Crash Game</h1>
-      <div className="multiplier">Multiplier: {multiplier.toFixed(1)}x</div>
+      <div className="multiplier">Multiplier: {multiplier.toFixed(2)}x</div>
       <button onClick={placeBet} disabled={!gameActive}>
         Place Bet
       </button>

@@ -7,6 +7,7 @@ export interface Bet {
 
 export interface GameData {
   multiplier: number;
+  crashPoint: number;
 }
 
 export interface UserData {
