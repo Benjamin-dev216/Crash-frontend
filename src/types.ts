@@ -11,7 +11,6 @@ export interface GameData {
 }
 
 export interface UserData {
-  userId: number;
   username: string;
   amount: number;
 }

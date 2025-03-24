@@ -131,7 +131,9 @@ const InputField: React.FC<InputFieldProps> = ({
   onChange,
 }) => (
   <div>
-    <label className="block text-sm font-medium text-gray-700">{label}</label>
+    <label className="block text-sm font-medium text-gray-700 float-start">
+      {label}
+    </label>
     <input
       type={type}
       name={name}
