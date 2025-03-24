@@ -63,24 +63,24 @@ const Landing: React.FC = () => {
   }, [loggedIn, userData]);
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
+    <div className="min-h-screen bg-[#090e2a] w-screen min-w-[1420px]">
       {loggedIn && userData ? (
-        <>
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-bold">
-              Welcome, {userData.username}!
-            </h1>
+        <div className="grid grid-cols-7 p-4 bg-gray-900 text-white min-h-screen">
+          {/* <div className="flex justify-between items-center mb-4">
             <button
               onClick={handleLogout}
               className="px-4 py-2 bg-red-500 text-black rounded"
             >
               Logout
             </button>
+          </div> */}
+          <div className="col-span-2 p-4">
+            <UserList />
           </div>
-          <Game />
-          <UserList />
-          <UserHistory userId={userData.userId} />
-        </>
+          <div className="col-span-5 p-4 ">
+            <Game />
+          </div>
+        </div>
       ) : (
         <AuthModal
           show={showAuthModal}

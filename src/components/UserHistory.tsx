@@ -1,9 +1,10 @@
-import { useEffect, useState, FC, useCallback } from "react";
+import { useEffect, useState, FC, useCallback, useRef } from "react";
 import { toast } from "react-toastify";
 import { AxiosError } from "axios";
 import "react-toastify/dist/ReactToastify.css";
 import axiosInstance from "../axios/axiosInstance";
 import socketInstance from "../axios/socket";
+import { GiAlarmClock } from "react-icons/gi";
 
 interface BetHistory {
   id: string;
@@ -23,9 +24,11 @@ interface UserHistoryProps {
 const UserHistory: FC<UserHistoryProps> = ({ userId }) => {
   const [history, setHistory] = useState<BetHistory[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const hasFetched = useRef(false); // Prevent double fetch
 
   const fetchHistory = useCallback(async () => {
-    if (!userId) return; // Prevent unnecessary API calls
+    if (!userId || hasFetched.current) return; // Prevent unnecessary API calls
+    hasFetched.current = true; // Mark as fetched
 
     setLoading(true);
     try {
@@ -49,84 +52,103 @@ const UserHistory: FC<UserHistoryProps> = ({ userId }) => {
       console.log("Updated Bet History:", data);
       setHistory(data.bets);
     });
-    fetchHistory();
+
+    fetchHistory(); // Fetch history once
+
     return () => {
       socketInstance.off("userHistoryUpdate"); // Cleanup listener on unmount
     };
   }, [fetchHistory]);
 
   return (
-    <div className="w-full p-4 bg-white shadow-lg rounded-lg">
-      <h2 className="text-xl font-semibold mb-4 border-b pb-2">Bet History</h2>
+    <div className="w-full bg-[#181c3a] rounded-3xl overflow-hidden relative flex flex-col h-full">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-orange-500 to-pink-500 p-3 text-white font-semibold text-sm flex items-center gap-2 rounded-t-md pl-8">
+        <GiAlarmClock />
+        <span>HISTORY</span>
+      </div>
 
-      {loading ? (
-        <div className="flex justify-center items-center h-20">
-          <span className="loader"></span>{" "}
-          {/* Replace with a spinner if needed */}
-        </div>
-      ) : history.length > 0 ? (
-        <div className="overflow-x-auto">
-          <table className="w-full border border-gray-300 text-left">
-            <thead>
-              <tr className="bg-gray-100 border-b">
+      {/* Scrollable Table Wrapper (Fixing overflow issue) */}
+      <div className="flex-1 min-h-0">
+        <div className="overflow-y-auto h-full">
+          <table className="w-full text-left text-gray-300 border-collapse">
+            {/* Sticky Header */}
+            <thead className="sticky top-0 bg-[#181c3a] z-10">
+              <tr className="text-xs text-center border-b border-gray-600 uppercase">
                 {[
-                  "DATE",
-                  "TIME",
-                  "ROUND ID",
-                  "BET",
-                  "ODDS",
-                  "WIN",
-                  "CRASH",
+                  "Date",
+                  "Time",
+                  "Round ID",
+                  "Bet",
+                  "Odds",
+                  "Win",
+                  "Crash",
                 ].map((head) => (
-                  <th key={head} className="p-2">
+                  <th key={head} className="p-2 text-gray-400 bg-[#181c3a]">
                     {head}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {history.map(
-                ({
-                  id,
-                  createdAt,
-                  roundId,
-                  amount,
-                  odds,
-                  winAmount,
-                  crashPoint,
-                  result,
-                }) => {
-                  const date = new Date(createdAt);
-
-                  return (
-                    <tr key={id} className="border-b hover:bg-gray-50">
-                      <td className="p-2">{date.toLocaleDateString()}</td>
-                      <td className="p-2">{date.toLocaleTimeString()}</td>
-                      <td className="p-2">{roundId}</td>
-                      <td className="p-2 font-medium">
-                        ${Number(amount || 0).toFixed(2)}
-                      </td>
-                      <td className="p-2">{Number(odds || 1).toFixed(2)}x</td>
-                      <td
-                        className={`p-2 font-bold ${
-                          result === "win" ? "text-green-500" : "text-red-500"
-                        }`}
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="p-4 text-center">
+                    <span className="loader"></span>
+                  </td>
+                </tr>
+              ) : history.length > 0 ? (
+                history.map(
+                  ({
+                    id,
+                    createdAt,
+                    roundId,
+                    amount,
+                    odds,
+                    winAmount,
+                    crashPoint,
+                    result,
+                  }) => {
+                    const date = new Date(createdAt);
+                    return (
+                      <tr
+                        key={id}
+                        className="border-b text-center border-gray-700 text-sm hover:bg-gray-800"
                       >
-                        {winAmount ? `$${Number(winAmount).toFixed(2)}` : "-"}
-                      </td>
-                      <td className="p-2 text-orange-500">
-                        {crashPoint ? `${Number(crashPoint).toFixed(2)}x` : "-"}
-                      </td>
-                    </tr>
-                  );
-                }
+                        <td className="p-2">{date.toLocaleDateString()}</td>
+                        <td className="p-2">{date.toLocaleTimeString()}</td>
+                        <td className="p-2">{roundId}</td>
+                        <td className="p-2 text-white">
+                          ${Number(amount || 0).toFixed(2)}
+                        </td>
+                        <td className="p-2">{Number(odds || 1).toFixed(2)}x</td>
+                        <td
+                          className={`p-2 font-bold ${
+                            result === "win" ? "text-green-400" : "text-red-400"
+                          }`}
+                        >
+                          {winAmount ? `$${Number(winAmount).toFixed(2)}` : "-"}
+                        </td>
+                        <td className="p-2 text-orange-400">
+                          {crashPoint
+                            ? `${Number(crashPoint).toFixed(2)}x`
+                            : "-"}
+                        </td>
+                      </tr>
+                    );
+                  }
+                )
+              ) : (
+                <tr>
+                  <td colSpan={7} className="p-6 text-center text-gray-400">
+                    You haven't placed any bets yet
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
         </div>
-      ) : (
-        <p className="text-center text-gray-500">No bet history found.</p>
-      )}
+      </div>
     </div>
   );
 };
