@@ -1,92 +1,66 @@
 import React, { useState, useEffect } from "react";
 import Game from "../components/Game";
 import UserList from "../components/UserList";
+import UserHistory from "../components/UserHistory";
 import AuthModal from "../components/AutoModal";
 import axiosInstance from "../axios/axiosInstance";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { useUserContext } from "../context/UserContext"; // Import the custom hook
+import { useUserContext } from "../context/UserContext";
 import axios from "axios";
 import socketInstance from "../axios/socket";
 
 const Landing: React.FC = () => {
-  const { userData, setUserData } = useUserContext(); // Access the userData and setUserData from context
+  const { userData, setUserData } = useUserContext();
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [loggedIn, setLoggedIn] = useState<boolean>(!!userData); // Check if userData exists
+  const [loggedIn, setLoggedIn] = useState<boolean>(!!userData);
 
-  // Show toast message function
   const showToastMessage = (msg: string) => {
     toast.error(msg, { position: "top-center" });
   };
 
-  // Save user data to localStorage and context
   const saveUserData = (data: any) => {
-    localStorage.setItem("user", JSON.stringify(data)); // Save the entire user data
-    setUserData(data); // Update user data in context
+    localStorage.setItem("user", JSON.stringify(data));
+    setUserData(data);
     setLoggedIn(true);
     setShowAuthModal(false);
   };
 
-  // Handle login
-  const handleLogin = async (username: string, password: string) => {
+  const handleAuth = async (
+    endpoint: string,
+    username: string,
+    password: string
+  ) => {
     try {
-      const response = await axiosInstance.post("/auth/signin", {
+      const response = await axiosInstance.post(endpoint, {
         username,
         password,
       });
-
       if (response.data) {
-        saveUserData(response.data); // Save the whole response.data as user data
+        saveUserData(response.data);
       } else {
-        console.error("Invalid credentials");
+        console.error("Authentication failed");
       }
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
         showToastMessage(error.response.data.message);
-        console.error(error.response.data.message);
       } else {
         console.error("An unknown error occurred");
       }
     }
   };
 
-  // Handle registration
-  const handleRegister = async (username: string, password: string) => {
-    try {
-      const response = await axiosInstance.post("/auth/signup", {
-        username,
-        password,
-      });
-
-      if (response.data) {
-        saveUserData(response.data); // Save the whole response.data as user data
-      } else {
-        console.error("Registration failed");
-      }
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        showToastMessage(error.response.data.message);
-        console.error(error.response.data.message);
-      } else {
-        console.error("An unknown error occurred");
-      }
-    }
-  };
-
-  // Logout function
   const handleLogout = () => {
     localStorage.removeItem("user");
-    setUserData(null); // Clear context data
+    setUserData(null);
     setLoggedIn(false);
     setShowAuthModal(true);
   };
 
   useEffect(() => {
-    if (!loggedIn) {
-      setShowAuthModal(true);
-    }
-    socketInstance.emit("registerUser", userData.userId);
-  }, [loggedIn]);
+    if (!loggedIn) setShowAuthModal(true);
+    if (userData) socketInstance.emit("registerUser", userData.userId);
+  }, [loggedIn, userData]);
 
   return (
     <div className="min-h-screen bg-gray-100 p-4">
@@ -105,13 +79,18 @@ const Landing: React.FC = () => {
           </div>
           <Game />
           <UserList />
+          <UserHistory userId={userData.userId} />
         </>
       ) : (
         <AuthModal
           show={showAuthModal}
           onHide={() => setShowAuthModal(false)}
-          onLogin={handleLogin}
-          onRegister={handleRegister}
+          onLogin={(username, password) =>
+            handleAuth("/auth/signin", username, password)
+          }
+          onRegister={(username, password) =>
+            handleAuth("/auth/signup", username, password)
+          }
         />
       )}
       <ToastContainer />
