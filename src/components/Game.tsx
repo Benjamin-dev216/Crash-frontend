@@ -16,7 +16,7 @@ const Game: React.FC = () => {
   const [betActive, setBetActive] = useState(true);
   const [cashoutDisabled, setCashoutDisabled] = useState(true);
   const [countdown, setCountdown] = useState<number | null>(null); // Store countdown
-  const [betAmount, setBetAmount] = useState<string>(""); // User-input bet amount
+  const [betAmount, setBetAmount] = useState<string>("50"); // User-input bet amount
 
   const multiplierRef = useRef(multiplier); // Track multiplier without re-rendering
 
@@ -98,15 +98,13 @@ const Game: React.FC = () => {
 
   return (
     <div className=" flex flex-col h-full">
-      <div className="h-3/5 bg-[#151937] rounded-lg flex items-center justify-center mb-8">
+      <div className="h-3/5 bg-[#151937] rounded-lg flex items-center justify-center mb-8 text-7xl font-extrabold">
         {/* Countdown below all contents */}
         {countdown !== null ? (
-          <div className="mt-8 text-lg font-medium">
-            Game starts in: {countdown} seconds
-          </div>
+          <div className="mt-8 font-medium">{countdown}</div>
         ) : (
-          <div className="text-xl font-bold mt-4">
-            {gameActive ? multiplier.toFixed(2) : ""}x
+          <div className="font-bold mt-4">
+            {gameActive ? multiplier.toFixed(2) + "x" : ""}
           </div>
         )}
       </div>
@@ -114,14 +112,14 @@ const Game: React.FC = () => {
         <div className="w-2/3 h-full">
           <UserHistory userId={userData.userId} />
         </div>
-        <div className="bg-[#151937] rounded-lg text-white w-1/3 h-full p-3 text-center">
+        <div className="bg-[#151937] rounded-lg text-white w-1/3 h-full p-3 text-left">
           <label className="block text-gray-400 text-xs mb-1">Bet</label>
           <input
             type="number"
             value={betAmount}
             placeholder="0"
             onChange={handleBetChange}
-            className="w-full bg-transparent border border-orange-500 text-white p-1 text-xs rounded mb-2 focus:outline-none focus:ring-1 focus:ring-orange-400"
+            className="w-full bg-white text-black p-1 text-xs rounded mb-2 focus:outline-none "
             min="1"
           />
           <div className="grid grid-cols-4 gap-2 mb-2">
@@ -147,19 +145,20 @@ const Game: React.FC = () => {
             <button
               onClick={placeBet}
               disabled={!betActive}
-              className={`flex-1 py-1 text-xs rounded font-semibold ${
+              className={`flex-1 py-1 text-xs rounded font-semibold h-10 ${
                 betActive ? "bg-orange-500 hover:bg-orange-600" : "bg-gray-600"
               }`}
             >
-              PLACE A BET
+              <div>PLACE A BET</div>
+              <div className="text-[10px]">{gameActive && "(next round)"}</div>
             </button>
             <button
               onClick={cashOut}
               disabled={cashoutDisabled}
               className={`flex-1 py-1 text-xs rounded font-semibold ${
                 cashoutDisabled
-                  ? "bg-gray-700 text-gray-500"
-                  : "bg-gray-500 hover:bg-gray-600 text-white"
+                  ? "bg-[#7d2d46] text-gray-500"
+                  : "bg-[#b11b1b] hover:bg-gray-600 text-white"
               }`}
             >
               TAKE WINNINGS

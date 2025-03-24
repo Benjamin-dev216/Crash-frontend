@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Game from "../components/Game";
 import UserList from "../components/UserList";
-import UserHistory from "../components/UserHistory";
 import AuthModal from "../components/AutoModal";
 import axiosInstance from "../axios/axiosInstance";
 import { ToastContainer, toast } from "react-toastify";
@@ -63,17 +62,15 @@ const Landing: React.FC = () => {
   }, [loggedIn, userData]);
 
   return (
-    <div className="min-h-screen bg-[#090e2a] w-screen min-w-[1420px]">
+    <div className="min-h-screen bg-[#090e2a] w-screen min-w-[1420px] relative">
       {loggedIn && userData ? (
         <div className="grid grid-cols-7 p-4 bg-gray-900 text-white min-h-screen">
-          {/* <div className="flex justify-between items-center mb-4">
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 bg-red-500 text-black rounded"
-            >
-              Logout
-            </button>
-          </div> */}
+          <button
+            onClick={handleLogout}
+            className="px-4 py-2 bg-red-500 text-white rounded absolute right-0 m-4 top-0"
+          >
+            Logout
+          </button>
           <div className="col-span-2 p-4">
             <UserList />
           </div>
