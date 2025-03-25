@@ -100,7 +100,9 @@ const UserList: React.FC = () => {
                     className={`border-b text-center border-gray-700 text-sm hover:bg-gray-800 ${
                       gameEnd && hasLost
                         ? "bg-red-500 text-white"
-                        : "bg-gray-800 text-gray-200"
+                        : hasLost
+                        ? "bg-gray-800 text-gray-200"
+                        : "text-green-500"
                     }`}
                   >
                     <td className="p-2">
@@ -112,14 +114,14 @@ const UserList: React.FC = () => {
                       {user.cashoutAt ? `x${user.cashoutAt.toFixed(2)}` : "x0"}
                     </td>
                     <td className="p-2 text-blue-300">
-                      {user.amount.toLocaleString()} VND
+                      {user.amount.toLocaleString()} USD
                     </td>
                     <td
                       className={`p-2 ${
                         winAmount > 0 ? "text-green-400" : "text-red-400"
                       }`}
                     >
-                      {winAmount.toLocaleString()} VND
+                      {winAmount.toLocaleString()} USD
                     </td>
                   </tr>
                 );
