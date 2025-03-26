@@ -7,6 +7,7 @@ import socketInstance from "../axios/socket";
 import { FaTimes } from "react-icons/fa";
 import UserHistory from "./UserHistory";
 import Autobet from "./Autobet";
+import AirplaneAnimation from "./Airplain";
 const betValues = [50, 200, 600, 1000, 6000, 20000];
 
 const Game: React.FC = () => {
@@ -19,6 +20,7 @@ const Game: React.FC = () => {
   const [countdown, setCountdown] = useState<number | null>(null); // Store countdown
   const [betAmount, setBetAmount] = useState<string>("50"); // User-input bet amount
   const [activeTab, setActiveTab] = useState("stake");
+  const [crashPoint, setCrashPoint] = useState<number>(1);
 
   const multiplierRef = useRef(multiplier); // Track multiplier without re-rendering
 
@@ -43,7 +45,8 @@ const Game: React.FC = () => {
     });
 
     // Listen for game start
-    socketInstance.on("gameStart", () => {
+    socketInstance.on("gameStart", (data) => {
+      setCrashPoint(data.crashPoint);
       setGameActive(true);
       setMultiplier(1);
       multiplierRef.current = 1;
@@ -53,6 +56,8 @@ const Game: React.FC = () => {
     // Listen for game end
     socketInstance.on("gameEnd", () => {
       setGameActive(false);
+      setMultiplier(1);
+      multiplierRef.current = 1;
     });
 
     socketInstance.on("cashoutDisabled", (disabled: boolean) => {
@@ -104,15 +109,14 @@ const Game: React.FC = () => {
 
   return (
     <div className=" flex flex-col h-full">
-      <div className="h-3/5 bg-[#151937] rounded-3xl flex items-center justify-center mb-8 text-7xl font-extrabold">
+      <div className="h-3/5 bg-[#151937] rounded-3xl flex items-center justify-center mb-8 text-7xl font-extrabold px-12 ">
         {/* Countdown below all contents */}
-        {countdown !== null ? (
-          <div className="mt-8 font-medium">{countdown}</div>
-        ) : (
-          <div className="font-bold mt-4">
-            {gameActive ? multiplier.toFixed(2) + "x" : ""}
-          </div>
-        )}
+        <AirplaneAnimation
+          multiplier={multiplier}
+          threshold={crashPoint}
+          countdown={countdown}
+          gameActive={gameActive}
+        />
       </div>
       <div className="flex gap-4 h-2/5">
         <div className="w-2/3 h-full">
