@@ -49,7 +49,6 @@ const UserHistory: FC<UserHistoryProps> = ({ userId }) => {
 
   useEffect(() => {
     socketInstance.on("userHistoryUpdate", (data) => {
-      console.log("Updated Bet History:", data);
       setHistory(data.bets);
     });
 

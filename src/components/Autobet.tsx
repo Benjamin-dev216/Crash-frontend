@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import socketInstance from "../axios/socket";
 
@@ -13,17 +13,19 @@ interface AutobetSettings {
 interface AutobetProps {
   gameActive?: boolean;
   countdown?: number | null;
-  placebet?: (amount: number, cashout: number) => void;
-  setBetAmount: (amount: number) => void;
+  cashOutDisabled: boolean;
+  placebet: (amount: number) => void;
+  cashOut: (cashout: number) => void;
 }
 
 const Autobet: React.FC<AutobetProps> = ({
   gameActive,
   countdown,
   placebet,
-  setBetAmount,
+  cashOut,
 }) => {
-  const [settings, setSettings] = useState<AutobetSettings>({
+  // Using useRef to persist state across renders without triggering re-renders
+  const settingsRef = useRef<AutobetSettings>({
     baseBet: "",
     maxStake: "",
     autoCashout: "",
@@ -31,79 +33,95 @@ const Autobet: React.FC<AutobetProps> = ({
     loseStrategy: "base",
   });
 
-  const [currentBet, setCurrentBet] = useState(0);
-  const [currentStake, setCurrentStake] = useState(0);
-  const [isAutobetActive, setIsAutobetActive] = useState(false);
+  const isAutobetActiveRef = useRef(false);
+  const currentBetRef = useRef(0);
+  const currentStakeRef = useRef(0);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null); // Store timeout reference
 
-  // Handle numeric input
+  const [, forceUpdate] = useState(0); // Force re-render when needed
+
+  // Handle numeric input changes
   const handleInputChange = (key: keyof AutobetSettings, value: string) => {
     if (/^\d*\.?\d*$/.test(value)) {
-      setSettings({ ...settings, [key]: value });
+      settingsRef.current = { ...settingsRef.current, [key]: value };
+      forceUpdate((prev) => prev + 1); // Trigger re-render
     }
   };
 
   const startAutobet = () => {
-    const baseBet = Number(settings.baseBet) || 0;
-    const maxStake = Number(settings.maxStake) || 0;
-    const autoCashout = Number(settings.autoCashout) || 1.01;
+    const baseBet = Number(settingsRef.current.baseBet) || 0;
+    const maxStake = Number(settingsRef.current.maxStake) || 0;
+    const autoCashout = Number(settingsRef.current.autoCashout) || 1.01;
 
     if (baseBet <= 0 || maxStake <= 0 || autoCashout < 1.01) {
       toast.error("Please enter valid bet settings.");
       return;
     }
 
-    setCurrentBet(0);
-    setCurrentStake(baseBet);
-    setIsAutobetActive(true);
+    currentBetRef.current = 0;
+    currentStakeRef.current = baseBet;
+    isAutobetActiveRef.current = true;
+    forceUpdate((prev) => prev + 1); // Trigger UI update
   };
 
   const stopAutobet = () => {
-    setIsAutobetActive(false);
+    isAutobetActiveRef.current = false;
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    forceUpdate((prev) => prev + 1); // Trigger UI update
+  };
+
+  const placeBetWithTimeout = (betAmount: number, cashout: number) => {
+    placebet(betAmount);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      cashOut(cashout);
+    }, 2000);
   };
 
   useEffect(() => {
     if (
-      isAutobetActive &&
-      gameActive &&
+      isAutobetActiveRef.current &&
+      !gameActive &&
       countdown &&
-      countdown > 1 &&
-      countdown <= 8
+      countdown >= 1 &&
+      countdown <= 7
     ) {
-      if (currentBet < Number(settings.maxStake)) {
-        const betAmount = currentStake;
-        const cashout = Number(settings.autoCashout) || 1.01;
-        setBetAmount(betAmount);
-        placebet?.(betAmount, cashout);
+      if (currentBetRef.current < Number(settingsRef.current.maxStake)) {
+        const betAmount = currentStakeRef.current;
+        const cashout = Number(settingsRef.current.autoCashout) || 1.01;
+        if (countdown === 1) {
+          placeBetWithTimeout(betAmount, cashout);
+        }
       } else {
         stopAutobet();
       }
     }
 
-    if (!gameActive) {
-      setIsAutobetActive(false);
-    }
+    return () => {
+      if (countdown !== 1 && timeoutRef.current)
+        clearTimeout(timeoutRef.current);
+    };
   }, [gameActive, countdown]);
 
   // Listen for bet results
   useEffect(() => {
     const handleBetResult = (betResult: { win: boolean; amount: number }) => {
-      if (!isAutobetActive) return;
+      if (!isAutobetActiveRef.current) return;
 
       if (betResult.win) {
-        setCurrentStake(
-          settings.winStrategy === "double"
+        currentStakeRef.current =
+          settingsRef.current.winStrategy === "double"
             ? betResult.amount * 2
-            : Number(settings.baseBet) || 0
-        );
+            : Number(settingsRef.current.baseBet) || 0;
       } else {
-        setCurrentStake(
-          settings.loseStrategy === "double"
+        currentStakeRef.current =
+          settingsRef.current.loseStrategy === "double"
             ? betResult.amount * 2
-            : Number(settings.baseBet) || 0
-        );
+            : Number(settingsRef.current.baseBet) || 0;
       }
 
-      setCurrentBet((prev) => prev + 1);
+      currentBetRef.current++;
+      forceUpdate((prev) => prev + 1); // Trigger UI update
     };
 
     socketInstance.on("betResult", handleBetResult);
@@ -111,7 +129,7 @@ const Autobet: React.FC<AutobetProps> = ({
     return () => {
       socketInstance.off("betResult", handleBetResult);
     };
-  }, [settings, isAutobetActive]);
+  }, []);
 
   return (
     <div className="w-full max-w-md mx-auto bg-transparent text-white rounded-lg">
@@ -130,7 +148,7 @@ const Autobet: React.FC<AutobetProps> = ({
               type="text"
               className="w-full p-1.5 text-sm bg-white text-black border border-gray-500 rounded-md focus:outline-none"
               placeholder="Enter amount"
-              value={settings[key]}
+              value={settingsRef.current[key]}
               onChange={(e) => handleInputChange(key, e.target.value)}
             />
           </div>
@@ -159,10 +177,14 @@ const Autobet: React.FC<AutobetProps> = ({
                   }`}
                   name={strategy}
                   value={option}
-                  checked={settings[strategy] === option}
-                  onChange={() =>
-                    setSettings({ ...settings, [strategy]: option })
-                  }
+                  checked={settingsRef.current[strategy] === option}
+                  onChange={() => {
+                    settingsRef.current = {
+                      ...settingsRef.current,
+                      [strategy]: option,
+                    };
+                    forceUpdate((prev) => prev + 1);
+                  }}
                 />
                 <span className="ml-2 text-sm">
                   {option === "base"
@@ -177,9 +199,10 @@ const Autobet: React.FC<AutobetProps> = ({
 
       {/* Start/Stop Autobet Button */}
       <div className="mt-2">
-        {isAutobetActive ? (
+        {isAutobetActiveRef.current ? (
           <button
             onClick={stopAutobet}
+            disabled={gameActive}
             className="w-full bg-red-600 hover:bg-red-700 py-1 text-xs rounded font-semibold h-8"
           >
             Stop Autobet
@@ -187,6 +210,7 @@ const Autobet: React.FC<AutobetProps> = ({
         ) : (
           <button
             onClick={startAutobet}
+            disabled={gameActive}
             className="w-full bg-orange-500 hover:bg-orange-600 py-1 text-xs rounded font-semibold h-8"
           >
             PLACE AUTOBET
@@ -196,10 +220,7 @@ const Autobet: React.FC<AutobetProps> = ({
 
       {/* Betting Status */}
       <div className="mt-2 text-center text-sm">
-        <p>
-          Bet Count: {currentBet} / {settings.maxStake || 0}
-        </p>
-        <p>Current Stake: ${currentStake}</p>
+        <p>Current Stake: ${currentStakeRef.current}</p>
       </div>
     </div>
   );

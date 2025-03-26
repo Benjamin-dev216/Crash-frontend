@@ -75,17 +75,21 @@ const Game: React.FC = () => {
     };
   }, [countdown]); // Only update countdown state
 
-  const placeBet = () => {
+  const placeBet = (amount: number) => {
     const betData: UserData = {
       username: userData.username,
-      amount: Number(betAmount),
+      amount: Number(amount),
     };
     socketInstance.emit("placeBet", betData);
     setBetActive(false);
   };
 
-  const cashOut = () => {
-    socketInstance.emit("cashout", { username: userData.username, multiplier });
+  const cashOut = (cashout: number) => {
+    socketInstance.emit("cashout", {
+      username: userData.username,
+      multiplier: cashout,
+    });
+
     setCashoutDisabled(true);
   };
 
@@ -172,7 +176,7 @@ const Game: React.FC = () => {
                 </div>
                 <div className="flex gap-1">
                   <button
-                    onClick={placeBet}
+                    onClick={() => placeBet(Number(betAmount))}
                     disabled={!betActive}
                     className={`flex-1 py-1 text-xs rounded font-semibold h-10 ${
                       betActive
@@ -186,7 +190,7 @@ const Game: React.FC = () => {
                     </div>
                   </button>
                   <button
-                    onClick={cashOut}
+                    onClick={() => cashOut(multiplier)}
                     disabled={cashoutDisabled}
                     className={`flex-1 py-1 text-xs rounded font-semibold ${
                       cashoutDisabled
@@ -202,8 +206,9 @@ const Game: React.FC = () => {
               <Autobet
                 gameActive={gameActive}
                 countdown={countdown}
+                cashOutDisabled={cashoutDisabled}
                 placebet={placeBet}
-                setBetAmount={(amount: number) => setBetAmount(String(amount))}
+                cashOut={cashOut}
               />
             )}
           </div>
