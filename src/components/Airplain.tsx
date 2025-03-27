@@ -24,8 +24,9 @@ const AirplaneAnimation: React.FC<AirplaneAnimationProps> = ({
   const [hasExploded, setHasExploded] = useState(false);
   const [hidePlane, setHidePlane] = useState(false);
   const [progress, setProgress] = useState(0);
-  const controls = useAnimation();
+  const [explosionOffset, setExplosionOffset] = useState("0%");
 
+  const controls = useAnimation();
   const startTimeRef = useRef<number | null>(null);
   const rafRef = useRef<number | null>(null);
 
@@ -40,7 +41,7 @@ const AirplaneAnimation: React.FC<AirplaneAnimationProps> = ({
     return () => observer.disconnect();
   }, []);
 
-  // Animate path and track progress
+  // Path animation and progress tracking
   useEffect(() => {
     if (!gameActive) {
       cancelAnimationFrame(rafRef.current!);
@@ -75,6 +76,7 @@ const AirplaneAnimation: React.FC<AirplaneAnimationProps> = ({
   useEffect(() => {
     if (gameActive && multiplier >= threshold && !hasExploded) {
       setHasExploded(true);
+      setExplosionOffset(`${(progress * 100).toFixed(2)}%`);
       setShowExplosion(true);
       controls.stop();
       onExplode?.();
@@ -85,7 +87,15 @@ const AirplaneAnimation: React.FC<AirplaneAnimationProps> = ({
         cancelAnimationFrame(rafRef.current!);
       }, 1500);
     }
-  }, [multiplier, threshold, gameActive, hasExploded, onExplode, controls]);
+  }, [
+    multiplier,
+    threshold,
+    gameActive,
+    hasExploded,
+    progress,
+    onExplode,
+    controls,
+  ]);
 
   const pathD = useMemo(() => {
     const { width, height } = size;
@@ -98,8 +108,6 @@ const AirplaneAnimation: React.FC<AirplaneAnimationProps> = ({
       })
       .join(" L")}`;
   }, [size]);
-
-  const offsetDistance = `${(progress * 100).toFixed(2)}%`;
 
   return (
     <div
@@ -164,7 +172,10 @@ const AirplaneAnimation: React.FC<AirplaneAnimationProps> = ({
       {showExplosion && (
         <motion.div
           className="absolute"
-          style={{ offsetPath: `path('${pathD}')`, offsetDistance }}
+          style={{
+            offsetPath: `path('${pathD}')`,
+            offsetDistance: explosionOffset,
+          }}
           initial={{ scale: 1, opacity: 1 }}
           animate={{ scale: 1.8, opacity: 0 }}
           transition={{ duration: 1.5, ease: "easeOut" }}
