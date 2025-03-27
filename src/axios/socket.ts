@@ -1,5 +1,5 @@
 import io from "socket.io-client";
 
-const socketInstance = io("http://localhost:4001"); // Adjust to your backend URL
+const socketInstance = io(import.meta.env.VITE_SOCKET_URL); // Adjust to your backend URL
 
 export default socketInstance;
