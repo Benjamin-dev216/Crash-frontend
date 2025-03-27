@@ -9,6 +9,8 @@ interface AirplaneAnimationProps {
   onExplode?: () => void;
 }
 
+const DURATION = 12;
+
 const AirplaneAnimation: React.FC<AirplaneAnimationProps> = ({
   multiplier,
   threshold,
@@ -22,93 +24,79 @@ const AirplaneAnimation: React.FC<AirplaneAnimationProps> = ({
   const [hasExploded, setHasExploded] = useState(false);
   const [hidePlane, setHidePlane] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [animationKey, setAnimationKey] = useState(0);
   const controls = useAnimation();
 
-  const DURATION = 12;
   const startTimeRef = useRef<number | null>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const rafRef = useRef<number | null>(null);
 
   // Resize observer
   useEffect(() => {
-    const observer = new ResizeObserver((entries) => {
-      const entry = entries[0];
+    const observer = new ResizeObserver(([entry]) => {
       const { width, height } = entry.contentRect;
       setSize({ width, height });
-
-      // Restart animation on resize
-      if (gameActive) {
-        setAnimationKey((k) => k + 1);
-      }
     });
 
-    if (containerRef.current) {
-      observer.observe(containerRef.current);
+    if (containerRef.current) observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  // Animate path and track progress
+  useEffect(() => {
+    if (!gameActive) {
+      cancelAnimationFrame(rafRef.current!);
+      controls.stop();
+      setTimeout(() => controls.set({ pathLength: 0 }), 300);
+      return;
     }
 
-    return () => observer.disconnect();
+    controls.set({ pathLength: 0 });
+    controls.start({
+      pathLength: 1,
+      transition: { duration: DURATION, ease: "linear" },
+    });
+
+    startTimeRef.current = performance.now();
+    setHasExploded(false);
+    setShowExplosion(false);
+    setHidePlane(false);
+
+    const animate = (now: number) => {
+      const elapsed = (now - (startTimeRef.current || 0)) / 1000;
+      const p = Math.min(elapsed / DURATION, 1);
+      setProgress(p);
+      if (p < 1) rafRef.current = requestAnimationFrame(animate);
+    };
+
+    rafRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(rafRef.current!);
   }, [gameActive]);
 
-  // Animate path
+  // Explosion logic
   useEffect(() => {
-    if (gameActive) {
-      controls.set({ pathLength: 0 });
-      controls.start({
-        pathLength: [0, 1],
-        transition: { duration: DURATION, ease: "linear" },
-      });
-
-      startTimeRef.current = Date.now();
-      setHasExploded(false);
-      setShowExplosion(false);
-      setHidePlane(false);
-
-      // Track time to compute current progress
-      intervalRef.current = setInterval(() => {
-        const elapsed = (Date.now() - (startTimeRef.current || 0)) / 1000;
-        const p = Math.min(elapsed / DURATION, 1);
-        setProgress(p);
-      }, 50);
-    } else {
-      clearInterval(intervalRef.current!);
-      controls.stop();
-      setTimeout(() => {
-        controls.set({ pathLength: 0 });
-      }, 800);
-    }
-
-    return () => clearInterval(intervalRef.current!);
-  }, [gameActive, animationKey, controls]);
-
-  // Handle explosion logic
-  useEffect(() => {
-    if (multiplier >= threshold && !hasExploded && gameActive) {
+    if (gameActive && multiplier >= threshold && !hasExploded) {
       setHasExploded(true);
       setShowExplosion(true);
+      controls.stop();
       onExplode?.();
 
-      // Hide plane after 1 second
-      controls.stop();
       setTimeout(() => {
-        clearInterval(intervalRef.current!);
         setHidePlane(true);
         setShowExplosion(false);
-      }, 800);
+        cancelAnimationFrame(rafRef.current!);
+      }, 1500);
     }
-  }, [multiplier, threshold, hasExploded, gameActive, onExplode, controls]);
+  }, [multiplier, threshold, gameActive, hasExploded, onExplode, controls]);
 
   const pathD = useMemo(() => {
     const { width, height } = size;
-    const points: string[] = [];
-
-    for (let i = 0; i <= 100; i++) {
-      const t = i / 100;
-      const x = t * width;
-      const y = height + 80 - t * t * height;
-      points.push(`${x},${y}`);
-    }
-
-    return `M${points.join(" L")}`;
+    return `M${[...Array(101)]
+      .map((_, i) => {
+        const t = i / 100;
+        const x = t * width;
+        const y = height + 80 - t * t * height;
+        return `${x},${y}`;
+      })
+      .join(" L")}`;
   }, [size]);
 
   const offsetDistance = `${(progress * 100).toFixed(2)}%`;
@@ -141,26 +129,13 @@ const AirplaneAnimation: React.FC<AirplaneAnimationProps> = ({
             <stop offset="100%" stopColor="#FFA500" />
           </linearGradient>
           <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feDropShadow
-              dx="0"
-              dy="0"
-              stdDeviation="3"
-              floodColor="#FFD700"
-              floodOpacity="1"
-            />
-            <feDropShadow
-              dx="0"
-              dy="0"
-              stdDeviation="6"
-              floodColor="#FACC15"
-              floodOpacity="0.9"
-            />
+            <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="#FFD700" />
+            <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#FACC15" />
             <feDropShadow
               dx="0"
               dy="0"
               stdDeviation="12"
               floodColor="#FBBF24"
-              floodOpacity="0.5"
             />
           </filter>
         </defs>
@@ -168,15 +143,12 @@ const AirplaneAnimation: React.FC<AirplaneAnimationProps> = ({
 
       {!hidePlane && gameActive && !hasExploded && (
         <motion.div
-          key={`plane-${animationKey}`}
           className="absolute"
           style={{ offsetPath: `path('${pathD}')`, offsetRotate: "auto" }}
-          animate={{ offsetDistance: ["0%", "100%"] }}
+          animate={{ offsetDistance: "100%" }}
           transition={{ duration: DURATION, ease: "linear" }}
         >
-          {/* This wrapper keeps sun+plane together */}
           <div className="relative w-[200px] h-[132px]">
-            {/* Rotating sun behind the plane */}
             <div className="absolute inset-0 flex items-center justify-center z-0 translate-y-[-60%]">
               <img
                 src="/airplane-shine.aa885f9c2127.png"
@@ -184,9 +156,7 @@ const AirplaneAnimation: React.FC<AirplaneAnimationProps> = ({
                 className="w-[200px] h-[200px] rotating-sun"
               />
             </div>
-
-            {/* Plane on top */}
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animated-plane z-10"></div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animated-plane z-10" />
           </div>
         </motion.div>
       )}
@@ -196,7 +166,7 @@ const AirplaneAnimation: React.FC<AirplaneAnimationProps> = ({
           className="absolute"
           style={{ offsetPath: `path('${pathD}')`, offsetDistance }}
           initial={{ scale: 1, opacity: 1 }}
-          animate={{ scale: [1, 1.8], opacity: [1, 0] }}
+          animate={{ scale: 1.8, opacity: 0 }}
           transition={{ duration: 1.5, ease: "easeOut" }}
         >
           <div className="explosion translate-y-[-30%] translate-x-[20%]" />
@@ -205,14 +175,12 @@ const AirplaneAnimation: React.FC<AirplaneAnimationProps> = ({
 
       <div className="absolute bottom-4 right-4 text-7xl font-semibold text-white drop-shadow-lg">
         {countdown !== null ? (
-          <span key={countdown} className="slide-down-strong">
+          <span key={countdown} className="slide-down-strong text-8xl">
             {countdown}
           </span>
         ) : gameActive ? (
           `${multiplier.toFixed(2)}x`
-        ) : (
-          ""
-        )}
+        ) : null}
       </div>
     </div>
   );

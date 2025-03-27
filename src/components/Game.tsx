@@ -8,6 +8,7 @@ import { FaTimes } from "react-icons/fa";
 import UserHistory from "./UserHistory";
 import Autobet from "./Autobet";
 import AirplaneAnimation from "./Airplain";
+import ParallaxMountains from "./MovingBackground";
 const betValues = [50, 200, 600, 1000, 6000, 20000];
 
 const Game: React.FC = () => {
@@ -109,8 +110,9 @@ const Game: React.FC = () => {
 
   return (
     <div className=" flex flex-col h-full">
-      <div className="h-3/5 bg-[#151937] rounded-3xl flex items-center justify-center mb-8 text-7xl font-extrabold px-12 ">
+      <div className="h-3/5 bg-[#151937] rounded-3xl flex items-center justify-center mb-8 text-7xl overflow-hidden font-extrabold px-12 relative">
         {/* Countdown below all contents */}
+        <ParallaxMountains isMoving={gameActive} />
         <AirplaneAnimation
           multiplier={multiplier}
           threshold={crashPoint}

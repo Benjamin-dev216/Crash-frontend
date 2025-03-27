@@ -1,8 +1,10 @@
+/* === Base Layout === */
 #root {
   margin: 0 auto;
   text-align: center;
 }
 
+/* === Logos === */
 .logo {
   height: 6em;
   padding: 1.5em;
@@ -16,6 +18,13 @@
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
+/* === Spinning Logo (on reduced motion preference) === */
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
 @keyframes logo-spin {
   from {
     transform: rotate(0deg);
@@ -25,10 +34,16 @@
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+/* === Animated Plane === */
+.animated-plane {
+  width: 200px;
+  height: 132px;
+  background-image: url("/airplane.dfbbc8b886fd.png");
+  background-repeat: no-repeat;
+  background-size: 4800% 100%;
+  animation: airplaneFrames 0.8s steps(48) infinite;
+  transform: translate(0%, -60%) scale(0.7);
+  z-index: 1;
 }
 
 @keyframes airplaneFrames {
@@ -36,9 +51,39 @@
     background-position-x: 0%;
   }
   to {
-    background-position-x: 0%;
+    background-position-x: 0%; /* Placeholder – consider adjusting if needed */
   }
 }
+
+/* === Explosion Animation === */
+.explosion {
+  width: 200px;
+  height: 200px;
+  background-image: url('/aitplane-crash.e54114f0b2a9.png');
+  background-repeat: no-repeat;
+  background-size: 5000px 200px; /* Scale the whole image so frames fit */
+  animation: explode 6s steps(25) forwards;
+  transform: scale(0.5);
+}
+
+@keyframes explode {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -5000px 0;
+  }
+}
+
+
+/* === Sun Spin Animation === */
+.rotating-sun {
+  animation: sunSpin 4s linear infinite;
+  pointer-events: none;
+  opacity: 30%;
+  scale: 1.2;
+}
+
 @keyframes sunSpin {
   from {
     transform: rotate(0deg);
@@ -48,44 +93,17 @@
   }
 }
 
-.rotating-sun {
-  animation: sunSpin 4s linear infinite;
-  pointer-events: none;
-  opacity: 30%;
-  scale: 1.2;  
+/* === Text / Content Effects === */
+.card {
+  padding: 2em;
 }
 
-
-.animated-plane {
-  width: 200px;
-  height: 132px;
-  background-image: url("/airplane.dfbbc8b886fd.png");
-  background-repeat: no-repeat;
-  background-size: 4800% 100%;
-  animation: airplaneFrames 0.8s steps(48) infinite;
-  z-index: 1;
-  scale: 0.7;
-  transform: translate(0%, -80%);
-
+.read-the-docs {
+  color: #888;
 }
 
-/* Explosion.css */
-.explosion {
-  width: 200px;              /* Frame width */
-  height: 200px;             /* Frame height */
-  background-image: url('/aitplane-crash.e54114f0b2a9.png');
-  background-repeat: no-repeat;
-  animation: explode 1.5s steps(25) forwards; /* 32 frames, adjust if different */
-  scale: 0.7;
-}
-
-@keyframes explode {
-  from {
-    background-position: 0 0;
-  }
-  to {
-    background-position: 0 0; /* 64px * 32 frames */
-  }
+.fade {
+  animation: fadeIn 0.5s ease-in-out;
 }
 
 @keyframes fadeIn {
@@ -96,6 +114,12 @@
     opacity: 1;
   }
 }
+
+/* === Slide/Entrance Effects === */
+.slide-down-strong {
+  animation: slideDownStrong 0.4s ease-out;
+}
+
 @keyframes slideDownStrong {
   0% {
     opacity: 0;
@@ -110,19 +134,13 @@
   }
 }
 
-.slide-down-strong {
-  animation: slideDownStrong 0.4s ease-out;
+/* === Background Animation Placeholder === */
+@keyframes moveBg {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
-
-.fade {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
-}

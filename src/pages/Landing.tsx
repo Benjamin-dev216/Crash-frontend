@@ -67,7 +67,7 @@ const Landing: React.FC = () => {
         <div className="grid grid-cols-7 p-4 bg-gray-900 text-white min-h-screen">
           <button
             onClick={handleLogout}
-            className="px-4 py-2 bg-red-500 text-white rounded absolute right-0 m-4 top-0"
+            className="px-4 py-2 bg-red-500 text-white rounded absolute right-0 z-20 m-4 top-0"
           >
             Logout
           </button>
