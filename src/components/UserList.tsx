@@ -48,7 +48,7 @@ const UserList: React.FC = () => {
   return (
     <div className="h-full bg-[#181c3a] rounded-3xl overflow-hidden ">
       {/* Header section */}
-      <div className="flex justify-between items-center p-4 px-8 bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold rounded-t-3xl text-sm">
+      <div className="p-[10px] sm:p-4 sm:px-8 flex justify-between items-center bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold rounded-t-3xl text-sm">
         <div className="flex flex-col items-center">
           <div>Number of players</div>
           <span className="flex items-center">
