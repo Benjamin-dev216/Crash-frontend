@@ -46,6 +46,11 @@
   z-index: 1;
 }
 
+@media (max-width: 640px) {
+  .animated-plane {
+    transform: translate(15%, -43%) scale(0.6); /* Less translate on mobile */
+  }
+}
 @keyframes airplaneFrames {
   from {
     background-position-x: 0%;

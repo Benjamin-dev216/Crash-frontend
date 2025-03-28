@@ -62,19 +62,23 @@ const Landing: React.FC = () => {
   }, [loggedIn, userData]);
 
   return (
-    <div className="min-h-screen bg-[#090e2a] w-screen min-w-[1420px] relative">
+    <div className="h-screen bg-[#090e2a] w-full md:min-w-[1400px] overflow-x-hidden relative">
       {loggedIn && userData ? (
-        <div className="grid grid-cols-7 p-4 bg-gray-900 text-white min-h-screen">
+        <div className="grid grid-cols-1 md:grid-cols-7 px-0 py-0 md:p-4 text-white min-h-screen gap-0 md:gap-4">
           <button
             onClick={handleLogout}
-            className="px-4 py-2 bg-red-500 text-white rounded absolute right-0 z-20 m-4 top-0"
+            className="px-1 py-0.5 sm:px-4 sm:py-2 text-[10px] sm:text-sm bg-red-500 text-white rounded top-1 right-1 sm:top-4 sm:right-4 z-50 absolute"
           >
             Logout
           </button>
-          <div className="col-span-2 p-4">
+
+          {/* Sidebar - UserList */}
+          <div className="md:col-span-2 col-span-1 p-2 md:p-4">
             <UserList />
           </div>
-          <div className="col-span-5 p-4 ">
+
+          {/* Main Game */}
+          <div className="md:col-span-5 col-span-1 p-2 md:p-4">
             <Game />
           </div>
         </div>

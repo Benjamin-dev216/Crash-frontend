@@ -109,9 +109,9 @@ const Game: React.FC = () => {
   };
 
   return (
-    <div className=" flex flex-col h-full">
-      <div className="h-3/5 bg-[#151937] rounded-3xl flex items-center justify-center mb-8 text-7xl overflow-hidden font-extrabold px-12 relative">
-        {/* Countdown below all contents */}
+    <div className="flex flex-col h-full">
+      {/* Top Display */}
+      <div className="h-[40vh] md:h-3/5 bg-[#151937] rounded-3xl flex items-center justify-center mb-4 text-4xl md:text-7xl overflow-hidden font-extrabold px-4 md:px-12 relative">
         <ParallaxMountains isMoving={gameActive} />
         <AirplaneAnimation
           multiplier={multiplier}
@@ -120,14 +120,19 @@ const Game: React.FC = () => {
           gameActive={gameActive}
         />
       </div>
-      <div className="flex gap-4 h-2/5">
-        <div className="w-2/3 h-full">
+
+      {/* Bottom Section */}
+      <div className="flex flex-col md:flex-row gap-4 h-[60vh] md:h-2/5">
+        {/* User History */}
+        <div className="w-full md:w-2/3 h-full">
           <UserHistory userId={userData.userId} />
         </div>
-        <div className="bg-[#151937] rounded-lg text-white w-1/3 h-full p-3 text-left">
+
+        {/* Stake Section */}
+        <div className="bg-[#151937] rounded-lg text-white w-full md:w-1/3 h-full p-3 text-left">
           <div className="flex">
             <button
-              className={`flex-1 py-2 text-xs font-semibold  ${
+              className={`flex-1 py-2 text-xs font-semibold ${
                 activeTab === "stake"
                   ? "bg-[#2A2D40] text-white"
                   : "bg-[#151937] text-gray-400"
@@ -137,7 +142,7 @@ const Game: React.FC = () => {
               STAKE SELECTOR
             </button>
             <button
-              className={`flex-1 py-2 text-xs font-semibold  ${
+              className={`flex-1 py-2 text-xs font-semibold ${
                 activeTab === "autobet"
                   ? "bg-[#2A2D40] text-white"
                   : "bg-[#151937] text-gray-400"
@@ -158,10 +163,10 @@ const Game: React.FC = () => {
                   value={betAmount}
                   placeholder="0"
                   onChange={handleBetChange}
-                  className="w-full bg-white text-black p-1 text-xs rounded mb-2 focus:outline-none "
+                  className="w-full bg-white text-black p-1 text-xs rounded mb-2 focus:outline-none"
                   min="1"
                 />
-                <div className="grid grid-cols-4 gap-2 mb-2">
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-2">
                   {betValues.map((value) => (
                     <button
                       key={value}
@@ -180,11 +185,12 @@ const Game: React.FC = () => {
                     <FaTimes size={10} />
                   </button>
                 </div>
-                <div className="flex gap-1">
+
+                <div className="flex flex-col sm:flex-row gap-2">
                   <button
                     onClick={() => placeBet(Number(betAmount))}
                     disabled={!betActive}
-                    className={`flex-1 py-1 text-xs rounded font-semibold h-10 ${
+                    className={`flex-1 py-2 text-xs rounded font-semibold ${
                       betActive
                         ? "bg-orange-500 hover:bg-orange-600"
                         : "bg-gray-600"
@@ -198,7 +204,7 @@ const Game: React.FC = () => {
                   <button
                     onClick={() => cashOut(multiplier)}
                     disabled={cashoutDisabled}
-                    className={`flex-1 py-1 text-xs rounded font-semibold ${
+                    className={`flex-1 py-2 text-xs rounded font-semibold ${
                       cashoutDisabled
                         ? "bg-[#7d2d46] text-gray-500"
                         : "bg-[#b11b1b] hover:bg-[#b11b1d] text-white"
