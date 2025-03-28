@@ -9,6 +9,7 @@ import UserHistory from "./UserHistory";
 import Autobet from "./Autobet";
 import AirplaneAnimation from "./Airplain";
 import ParallaxMountains from "./MovingBackground";
+import UserList from "./UserList";
 const betValues = [50, 200, 600, 1000, 6000, 20000];
 
 const Game: React.FC = () => {
@@ -124,12 +125,12 @@ const Game: React.FC = () => {
       {/* Bottom Section */}
       <div className="flex flex-col md:flex-row gap-4 h-[60vh] md:h-2/5">
         {/* User History */}
-        <div className="w-full md:w-2/3 h-full">
+        {/* Desktop-only History - on the left */}
+        <div className="hidden md:block w-full md:w-2/3 h-full">
           <UserHistory userId={userData.userId} />
         </div>
-
         {/* Stake Section */}
-        <div className="bg-[#151937] rounded-lg text-white w-full md:w-1/3 h-full p-3 text-left">
+        <div className="order-1 md:order-none bg-[#151937] rounded-lg text-white w-full md:w-1/3 h-full p-3 text-left">
           <div className="flex">
             <button
               className={`flex-1 py-2 text-xs font-semibold ${
@@ -224,6 +225,13 @@ const Game: React.FC = () => {
               />
             )}
           </div>
+        </div>
+        <div className="order-2 md:hidden w-full h-full">
+          <UserList />
+        </div>
+        {/* History - mobile 4th, hidden on desktop (since desktop has its own) */}
+        <div className="order-3 md:hidden w-full h-full">
+          <UserHistory userId={userData.userId} />
         </div>
       </div>
       <ToastContainer />

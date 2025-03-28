@@ -73,7 +73,7 @@ const Landing: React.FC = () => {
           </button>
 
           {/* Sidebar - UserList */}
-          <div className="md:col-span-2 col-span-1 p-2 md:p-4">
+          <div className="hidden md:block md:col-span-2 col-span-1 p-2 md:p-4">
             <UserList />
           </div>
 
