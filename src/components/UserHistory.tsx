@@ -32,10 +32,12 @@ const UserHistory: FC<UserHistoryProps> = ({ userId }) => {
 
     setLoading(true);
     try {
-      const { data } = await axiosInstance.get<{ bets: BetHistory[] }>(
-        `/game/history/${userId}`
-      );
-      setHistory(data.bets);
+      const { data } = await axiosInstance.get(`/game/history/${userId}`);
+      const historyItems = Array.isArray(data?.bets) ? data.bets : [];
+
+      if (historyItems.length > 0) {
+        setHistory(historyItems);
+      }
     } catch (error: unknown) {
       const err = error as AxiosError;
       const errorMessage =
@@ -96,7 +98,7 @@ const UserHistory: FC<UserHistoryProps> = ({ userId }) => {
                     <span className="loader"></span>
                   </td>
                 </tr>
-              ) : history.length > 0 ? (
+              ) : history?.length > 0 ? (
                 history.map(
                   ({
                     id,
